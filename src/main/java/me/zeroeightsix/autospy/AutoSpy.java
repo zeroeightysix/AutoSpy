@@ -155,10 +155,10 @@ public class AutoSpy {
             }
 
             Player finalToSpy = toSpy;
-            Task.builder().execute(() -> {
-                src.setSpectatorTarget(null);   // Spectate nothing, leaving the current player
-                src.setLocation(finalToSpy.getLocation());   // Teleport to the specified player, making sure the world and entity is loaded
-                src.setSpectatorTarget(finalToSpy);  // Spectate said player
+            Task.builder().execute(() -> src.setSpectatorTarget(null)).submit(pluginInstance);
+            Task.builder().delayTicks(2).execute(() -> src.setLocation(finalToSpy.getLocation())).submit(pluginInstance);
+            Task.builder().delayTicks(6).execute(() -> {
+                src.setSpectatorTarget(finalToSpy);
                 src.sendMessage(ChatTypes.ACTION_BAR, Text.builder("Now spectating: ")
                         .color(TextColors.GRAY)
                         .append(Text.builder(finalToSpy.getName()).color(TextColors.WHITE).build()) // Required to set colour to WHITE because otherwise it inherits the previous colour
