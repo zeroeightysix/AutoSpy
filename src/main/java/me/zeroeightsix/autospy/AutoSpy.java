@@ -52,7 +52,7 @@ public class AutoSpy {
 
     @Listener
     public void onServerStart(GameStartedServerEvent event){
-        Sponge.getCommandManager().register(this, spySpec, "spyall"); // Register our beloved /shrug command so we can actually use our beloved /shrug command
+        Sponge.getCommandManager().register(this, spySpec, "spyall", "autospy"); // Register our beloved /shrug command so we can actually use our beloved /shrug command
     }
 
     @Listener
