@@ -67,10 +67,12 @@ public class AutoSpy {
      * @return
      */
     private boolean removePlayer(Player player) {
-        logger.info("Removing " + player.getName() + " from autospy.");
         Task task = taskHashMap.get(player).key;
+        boolean failed = task.cancel();
+        if (failed) return false;
+        logger.info("Removing " + player.getName() + " from autospy.");
         taskHashMap.remove(player);
-        return task.cancel();
+        return true;
     }
 
     /**
@@ -102,7 +104,7 @@ public class AutoSpy {
             if (src instanceof Player) {
                 if (taskHashMap.containsKey(src)) {
                     // The player is already in autospy, so we'll abort the task, send them a message and remove them from the map.
-                    if (!removePlayer((Player) src))
+                    if (removePlayer((Player) src))
                         src.sendMessage(Text.builder("No longer autospying.").color(TextColors.GREEN).build());
                     else
                         src.sendMessage(Text.builder("Oops! Something went wrong aborting the spying task! Try again?").color(TextColors.RED).build()); // please don't happen
@@ -152,11 +154,16 @@ public class AutoSpy {
                 if (toSpy.equals(src) || !toSpy.isOnline()) toSpy = null; // If the player is the spying player or if the player we chose has disconnected, repeat the process for the next player in our list.
             }
 
-            src.setSpectatorTarget(toSpy);
-            src.sendMessage(ChatTypes.ACTION_BAR, Text.builder("Now spectating: ")
-                    .color(TextColors.GRAY)
-                    .append(Text.builder(toSpy.getName()).color(TextColors.WHITE).build()) // Required to set colour to WHITE because otherwise it inherits the previous colour
-                    .build());
+            Player finalToSpy = toSpy;
+            Task.builder().execute(() -> {
+                src.setSpectatorTarget(null);   // Spectate nothing, leaving the current player
+                src.setLocation(finalToSpy.getLocation());   // Teleport to the specified player, making sure the world and entity is loaded
+                src.setSpectatorTarget(finalToSpy);  // Spectate said player
+                src.sendMessage(ChatTypes.ACTION_BAR, Text.builder("Now spectating: ")
+                        .color(TextColors.GRAY)
+                        .append(Text.builder(finalToSpy.getName()).color(TextColors.WHITE).build()) // Required to set colour to WHITE because otherwise it inherits the previous colour
+                        .build());
+            }).submit(pluginInstance);
         }
     }
 
