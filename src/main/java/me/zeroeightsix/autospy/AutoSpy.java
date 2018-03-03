@@ -139,8 +139,9 @@ public class AutoSpy {
                 src.sendMessage(Text.builder("No longer autospying.").color(TextColors.DARK_GREEN).build());
                 return;
             }
-            if (Sponge.getServer().getOnlinePlayers().size()==1)
-                return; // This player is the only player online, no need to spy
+            // If all players online should be ignored for spying, quit
+            if (Sponge.getServer().getOnlinePlayers().stream().allMatch(AutoSpy.this::ignorePlayer))
+                return;
 
             Iterator<Player> iterator = taskHashMap.get(src).value;
 
@@ -151,7 +152,7 @@ public class AutoSpy {
                     iterator = taskHashMap.get(src).value;
                 }
                 toSpy = iterator.next();
-                if (toSpy.equals(src) || !toSpy.isOnline()) toSpy = null; // If the player is the spying player or if the player we chose has disconnected, repeat the process for the next player in our list.
+                if (ignorePlayer(toSpy)) toSpy = null; // If the chosen player is to be ignored, loop to the next
             }
 
             Player finalToSpy = toSpy;
@@ -165,6 +166,10 @@ public class AutoSpy {
                         .build());
             }).submit(pluginInstance);
         }
+    }
+
+    private boolean ignorePlayer(Player player) {
+        return !player.isOnline() || player.hasPermission("autospy.exempt") || player.hasPermission("autospy.spyall") || taskHashMap.containsKey(player);
     }
 
     private class Pair<T, S> {
