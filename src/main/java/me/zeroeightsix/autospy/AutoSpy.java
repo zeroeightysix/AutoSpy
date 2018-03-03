@@ -1,6 +1,5 @@
 package me.zeroeightsix.autospy;
 
-import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -69,7 +68,7 @@ public class AutoSpy {
      */
     private boolean removePlayer(Player player) {
         logger.info("Removing " + player.getName() + " from autospy.");
-        Task task = taskHashMap.get(player).getKey();
+        Task task = taskHashMap.get(player).key;
         taskHashMap.remove(player);
         return task.cancel();
     }
@@ -88,7 +87,7 @@ public class AutoSpy {
      * @param spying
      */
     private void refreshIterator(Player spying) {
-        taskHashMap.put(spying, new Pair<>(taskHashMap.get(spying).getKey(), getPlayerIterator()));
+        taskHashMap.put(spying, new Pair<>(taskHashMap.get(spying).key, getPlayerIterator()));
     }
 
     private class SpyExecutor implements CommandExecutor {
@@ -141,13 +140,13 @@ public class AutoSpy {
             if (Sponge.getServer().getOnlinePlayers().size()==1)
                 return; // This player is the only player online, no need to spy
 
-            Iterator<Player> iterator = taskHashMap.get(src).getValue();
+            Iterator<Player> iterator = taskHashMap.get(src).value;
 
             Player toSpy = null;
             while (toSpy==null) {
                 if (!iterator.hasNext()) { // If we have reached the end of the player list, 'refresh' the iterator to start from the beginning again.
                     refreshIterator(src);
-                    iterator = taskHashMap.get(src).getValue();
+                    iterator = taskHashMap.get(src).value;
                 }
                 toSpy = iterator.next();
                 if (toSpy.equals(src) || !toSpy.isOnline()) toSpy = null; // If the player is the spying player or if the player we chose has disconnected, repeat the process for the next player in our list.
@@ -158,6 +157,16 @@ public class AutoSpy {
                     .color(TextColors.GRAY)
                     .append(Text.builder(toSpy.getName()).color(TextColors.WHITE).build()) // Required to set colour to WHITE because otherwise it inherits the previous colour
                     .build());
+        }
+    }
+
+    private class Pair<T, S> {
+        T key;
+        S value;
+
+        public Pair(T key, S value) {
+            this.key = key;
+            this.value = value;
         }
     }
 }
