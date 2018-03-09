@@ -40,7 +40,8 @@ public class AutoSpy {
             .executor(new SpyExecutor(this))
             .permission("autospy.spyall")
             .arguments(
-                    GenericArguments.optional(GenericArguments.integer(Text.of("seconds")))
+                    GenericArguments.optional(GenericArguments.integer(Text.of("seconds"))),
+                    GenericArguments.optional(GenericArguments.integer(Text.of("loadinterval")))
             )
             .build();
     private Logger logger;
@@ -111,13 +112,16 @@ public class AutoSpy {
                 }else{
                     int seconds = 5; // Our default is 5 seconds
                     if (args.hasAny("seconds")) seconds = args.<Integer>getOne("seconds").orElse(null); // This **should** also never produce a NPE, if it does, blame sponge!!
+                    int interval = 5; // Our default is 5 seconds
+                    if (args.hasAny("loadinterval")) interval = args.<Integer>getOne("loadinterval").orElse(null); // Same as ^
 
                     Player player = (Player) src;
                     // Set the player's gamemode to spectator. If they are to manually go back to another mode, autospying is terminated.
                     player.offer(player.gameMode().set(GameModes.SPECTATOR));
                     // Add this player to the task map
                     taskHashMap.put(player, new Pair<>(null, getPlayerIterator()));
-                    Task task = Task.builder().execute(() -> spy(player))
+                    int finalInterval = interval; // lambda -> interval needs to be final
+                    Task task = Task.builder().execute(() -> spy(player, finalInterval))
                             .async()
                             .interval(seconds, TimeUnit.SECONDS)
                             .name("SpyAll for " + src.getName())
@@ -133,7 +137,7 @@ public class AutoSpy {
             return CommandResult.success();
         }
 
-        private void spy(Player src) {
+        private void spy(Player src, int interval) {
             if (src.gameMode().get() != GameModes.SPECTATOR) { // Our spying player has manually removed themselves from spectator mode, we assume they don't quite feel like spying anymore.
                 removePlayer(src);
                 src.sendMessage(Text.builder("No longer autospying.").color(TextColors.DARK_GREEN).build());
@@ -158,7 +162,7 @@ public class AutoSpy {
             Player finalToSpy = toSpy;
             Task.builder().execute(() -> src.setSpectatorTarget(null)).submit(pluginInstance);
             Task.builder().delayTicks(2).execute(() -> src.setLocation(finalToSpy.getLocation())).submit(pluginInstance);
-            Task.builder().delayTicks(6).execute(() -> {
+            Task.builder().delayTicks(interval).execute(() -> {
                 src.setSpectatorTarget(finalToSpy);
                 src.sendMessage(ChatTypes.ACTION_BAR, Text.builder("Now spectating: ")
                         .color(TextColors.GRAY)
