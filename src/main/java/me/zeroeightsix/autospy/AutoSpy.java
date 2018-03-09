@@ -112,7 +112,7 @@ public class AutoSpy {
                 }else{
                     int seconds = 5; // Our default is 5 seconds
                     if (args.hasAny("seconds")) seconds = args.<Integer>getOne("seconds").orElse(null); // This **should** also never produce a NPE, if it does, blame sponge!!
-                    int interval = 5; // Our default is 5 seconds
+                    int interval = 6; // Our default is 6 ticks
                     if (args.hasAny("loadinterval")) interval = args.<Integer>getOne("loadinterval").orElse(null); // Same as ^
 
                     Player player = (Player) src;
